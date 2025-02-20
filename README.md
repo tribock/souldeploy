@@ -1,8 +1,4 @@
-# souldeploy
-
-
-
-## soulTec Deployment Appliance aka soulDeploy!
+#  soulTec Deployment Appliance aka soulDeploy!
 
 ## Project Goal
 
@@ -30,17 +26,17 @@ Please see: https://linear.app/soultec/project/soultec-deployment-appliance-a273
 
 goVIA ist als docker container auf einer photonOS prepacked.
 
-goVIA ist dhcp, tfpd server
 
-goVIA
+
+**goVIA**
 https://10.177.176.17:8443/
 admin  / defaul-lab-PW
 
 SSH: root / 2x default-lab-PW
 
-Docker
+**Docker**
 /srv/stag/govia/docker
 
 1x compose file (/srv/stag/govia/docker/docker-compose.yaml)
 
-INFOS -> https://10.177.176.17:8443/help
+**INFOS** -> https://10.177.176.17:8443/help
