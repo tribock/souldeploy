@@ -26,7 +26,7 @@ goVIA stellt ein WebUI zur Verfügung. Nebst dem ist der goVIA Container dhcp un
 
 ## Architecture
 
-tbd
+![Architecture](https://gitlab.soultec.ch/soultec/souldeploy/-/raw/main/architecture/govia-overview.png)
 
 -> INFOS für Netzwerk-Team des Kunden:
 
