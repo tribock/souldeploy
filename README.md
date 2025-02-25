@@ -55,3 +55,12 @@ SSH: root / 2x default-lab-PW
 1x compose file (/srv/stag/govia/docker/docker-compose.yaml)
 
 **INFOS** -> https://10.177.176.17:8443/help
+
+
+## Notes on Network Config and HPE Server.
+
+- The Server must boot from the NIC where ESXi Management Uplink should be 
+- The MAC Adress of this pNIC must be added in the soulDeploy frontend
+- If the ESXi Management VLAN is only tagged on the physical Network, you can set VLAN ID in the RBSU, [see here](https://support.hpe.com/hpesc/public/docDisplay?docId=a00112581en_usen_us&page=GUID-D7147C7F-2016-0901-0A69-000000000AA1.html&docLocale=en_US)
+    - "Use the VLAN Configuration option to configure global VLAN settings for all enabled network interfaces. The configuration includes interfaces used in PXE boot, iSCSI boot, and HTTP/HTTPS boot, and for all preboot network access from the Embedded UEFI Shell."
+    - After VLAN Config is set on RBSU, reboot the Server.
