@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Usage: ./set_vlan.sh <ilo_ip> <ilo_username> <ilo_password> <vlan_id>
+
+
 # Prompt for input variables
 if [[ $# -eq 0 ]]
 then
