@@ -21,7 +21,7 @@ kube_api_packages = $(subst $(space),$(empty), \
 	$(kube_base_output_package)/core/v1 \
 	)
 
-kube_base_output_package = gitlab.ixcloud.ch/k8s-operators/caas-cluster-setup
+kube_base_output_package = gitlab.soultec.ch/soultec/souldeploy
 kube_clientset_package   = $(kube_base_output_package)/client
 kube_listers_package     = $(kube_base_output_package)/client/listers
 kube_informers_package   = $(kube_base_output_package)/client/informers
