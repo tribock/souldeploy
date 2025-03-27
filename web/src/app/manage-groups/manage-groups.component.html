@@ -1,0 +1,234 @@
+<h3> Host groups </h3>
+<p>Host groups are used to organize your hosts into groups that share the same image and configuration properties. This
+    saves you time by being able to organize all hosts that will look the same, and simply configure the group with
+    properties.</p>
+<button class="btn btn-outline btn-sm" (click)="showGroupModal('add')">Add Group</button>
+<div class="alert alert-danger" role="alert" *ngIf="errors">
+    <div class="alert-items">
+        <div class="alert-item static" *ngFor="let error of errors | keyvalue">
+            <div class="alert-icon-wrapper">
+                <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="alert-icon">
+                    <path d="M18,6A12,12,0,1,0,30,18,12,12,0,0,0,18,6Zm0,22A10,10,0,1,1,28,18,10,10,0,0,1,18,28Z">
+                    </path>
+                    <path d="M18,20.07a1.3,1.3,0,0,1-1.3-1.3v-6a1.3,1.3,0,1,1,2.6,0v6A1.3,1.3,0,0,1,18,20.07Z"></path>
+                    <circle cx="17.95" cy="23.02" r="1.5"></circle>
+                </svg>
+            </div>
+            <span class="alert-text">
+                {{error.value}}
+            </span>
+        </div>
+    </div>
+</div>
+
+<div *ngFor="let group of groups">
+    <h6>{{group.name}}</h6>
+    <button class="btn btn-outline btn-sm" (click)="toggleDatagrid(group.id)">
+        {{ isDatagridVisible(group.id) ? 'Hide' : 'Show' }} Hosts
+    </button>
+    <clr-datagrid  *ngIf="isDatagridVisible(group.id)">
+        <clr-dg-column>fqdn</clr-dg-column>
+        <clr-dg-column>ip address</clr-dg-column>
+        <clr-dg-column>mac address</clr-dg-column>
+        <clr-dg-column>progress</clr-dg-column>
+        <clr-dg-column>action</clr-dg-column>
+
+        <clr-dg-row *ngFor="let host of group.hosts">
+            <clr-dg-cell>{{host.hostname}}.{{host.domain}}</clr-dg-cell>
+            <clr-dg-cell>{{host.ip}}</clr-dg-cell>
+            <clr-dg-cell>{{host.mac}}</clr-dg-cell>
+            <clr-dg-cell>
+                <div class="progress top">
+                    <progress value="{{ progress[host.id] }}" max="100"></progress>
+                </div>
+                {{ progresstext[host.id] }}
+            </clr-dg-cell>
+            <clr-dg-cell>
+                <button class="btn btn-outline btn-sm" (click)="showHostModal('edit', group.id, host.id)">edit</button>
+                <button class="btn btn-warning-outline btn-sm" (click)="removeHost(host.id)">remove</button>
+                <button *ngIf="host.reimage === false" class="btn btn-warning-outline btn-sm"
+                    (click)="reImageHost(host.id)">re-image</button>
+                <button *ngIf="host.reimage === true" class="btn btn-warning-outline btn-sm"
+                    (click)="cancelImageHost(host.id)">cancel</button>
+            </clr-dg-cell>
+        </clr-dg-row>
+        <clr-dg-footer>{{ (group.hosts ?? []).length }} Hosts</clr-dg-footer>
+    </clr-datagrid>
+    <button class="btn btn-outline btn-sm" (click)="addHostToGroup(group.id, group.pool_id)">Add host</button>
+    <button class="btn btn-outline btn-sm" (click)="triggerFileInput()">Import Hosts</button>
+    <input type="file" #fileInput accept=".csv" (change)="importHostsFromCSVToGroup(group.id, group.pool_id)" style="display: none;" />
+    <button class="btn btn-outline btn-sm" (click)="showGroupModal('edit', group.id)">Edit Group</button>
+    <button class="btn btn-warning-outline btn-sm" (click)="removeGroup(group.id)">Remove</button>
+</div>
+
+<clr-modal [(clrModalOpen)]="showHostModalMode">
+    <h3 *ngIf="showHostModalMode === 'add'" class="modal-title">Add Host</h3>
+    <h3 *ngIf="showHostModalMode === 'edit'" class="modal-title">Edit Host</h3>
+    <div class="modal-body">
+        <form clrForm [formGroup]="Hostform" (ngSubmit)="submitHost()">
+            <cds-form-group layout="vertical">
+                <cds-input>
+                    <label class="clr-col-6 form-input">FQDN</label>
+                    <input placeholder="eg. esxi01.rainpole.io" type="text" formControlName="fqdn" name="fqdn" />
+                </cds-input>
+                <cds-input>
+                    <label class="clr-col-6 form-input">IP Address</label>
+                    <input placeholder="eg. 172.16.13.11" type="text" formControlName="ip" name="ip" />
+                </cds-input>
+                <cds-input>
+                    <label class="clr-col-6 form-input">mac</label>
+                    <input placeholder="eg. aa:bb:cc:00:11:22" type="text" formControlName="mac" name="mac" />
+                </cds-input>
+            </cds-form-group>
+            <div id="host_ks">
+                <cds-toggle>
+                    <label>Show advanced options</label>
+                    <input type="checkbox" [(ngModel)]="advanced" [ngModelOptions]="{standalone: true}"/>
+                </cds-toggle>
+                <cds-textarea layout="vertical" *ngIf="advanced" id="ks_textarea">
+                    <label>ks.cfg</label>
+                    <textarea formControlName="ks" name="ks"></textarea>
+                    <cds-control-message>Modify the default ks.cfg file</cds-control-message>
+                </cds-textarea>
+            </div>
+        </form>
+        <div class="alert alert-danger" role="alert" *ngIf="errors">
+            <div class="alert-items">
+                <div class="alert-item static" *ngFor="let error of errors | keyvalue">
+                    <div class="alert-icon-wrapper">
+                        <clr-icon class="alert-icon" shape="exclamation-circle"></clr-icon>
+                    </div>
+                    <span class="alert-text">
+                        {{error.value}}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <div class="modal-buttons">
+            <button type="button" class="btn btn-outline" (click)="showHostModalMode = ''">Cancel</button>
+            <button *ngIf="showHostModalMode === 'add'" type="button" class="btn btn-primary"
+                (click)="submitHost()">Add</button>
+            <button *ngIf="showHostModalMode === 'edit'" type="button" class="btn btn-primary"
+                (click)="updateHost()">Update</button>
+        </div>
+    </div>
+</clr-modal>
+
+<clr-modal [(clrModalOpen)]="showGroupModalMode">
+    <h3 *ngIf="showGroupModalMode === 'add'" class="modal-title">Add Group</h3>
+    <h3 *ngIf="showGroupModalMode === 'edit'" class="modal-title">Edit Group</h3>
+    <div class="modal-body">
+        <form clrForm [formGroup]="Groupform" (ngSubmit)="submitGroup()">
+            <cds-form-group layout="vertical">
+                <cds-input>
+                    <label class="clr-col-6 form-input">Group name</label>
+                    <input placeholder="eg. sfo-m01" type="text" formControlName="name" name="name" />
+                </cds-input>
+                <cds-select control-width="shrink">
+                    <label class="clr-col-6 form-input">DHCP Pool</label>
+                    <select name="pool_id" formControlName="pool_id">
+                        <option *ngFor="let pool of pools" [value]=pool.id>{{pool.name}}</option>
+                    </select>
+                </cds-select>
+                <cds-select control-width="shrink">
+                    <label class="clr-col-6 form-input">Image</label>
+                    <select name="image_id" formControlName="image_id">
+                        <option *ngFor="let image of images" [value]=image.id>{{image.iso_image}}</option>
+                    </select>
+                </cds-select>
+                <cds-input>
+                    <label class="clr-col-6 form-input">Password</label>
+                    <input placeholder="eg. VMware1!" type="password" formControlName="password" name="password" />
+                </cds-input>
+                <cds-input style="margin-top:0.5em;">
+                    <label class="clr-col-6 form-input">Boot drive (Optional)</label>
+                    <input placeholder="mpx.vmhba1:C0:T0:L0" name="bootdisk" id="bootdisk" formControlName="bootdisk" />
+                </cds-input>
+                <cds-input>
+                    <label class="clr-col-6 form-input">Management vlan (Optional)</label>
+                    <input placeholder="1611" type="text" formControlName="vlan" name="vlan" />
+                </cds-input>
+                <cds-input>
+                    <label class="clr-col-6 form-input">Callback URL (Optional)</label>
+                    <input placeholder="https://url/callbacks" type="text" formControlName="callbackurl"
+                        name="callbackurl" />
+                </cds-input>
+                <div class="postconfig"> Post config options </div>
+                <clr-control-helper class="postconfig-subtext">Enter all options you wish to be included in post-config
+                </clr-control-helper>
+                <cds-input>
+                    <label class="clr-col-6 form-input">DNS</label>
+                    <input placeholder="eg. 172.16.0.2,172.16.0.3" type="text" formControlName="dns" name="dns" />
+                </cds-input>
+                <cds-input>
+                    <label class="clr-col-6 form-input">NTP</label>
+                    <input placeholder="eg. 172.16.0.2,172.16.0.3" type="text" formControlName="ntp" name="ntp" />
+                </cds-input>
+                <cds-input>
+                    <label class="clr-col-6 form-input">Syslog</label>
+                    <input placeholder="eg. tcp://172.16.0.2:514,ssl://172.16.0.3:1514" type="text"
+                        formControlName="syslog" name="syslog" />
+                </cds-input>
+            </cds-form-group>
+            <br />
+            <div class="clr-control-container clr-control-inline">
+                <clr-checkbox-wrapper>
+                    <input type="checkbox" clrCheckbox name="ssh" id="ssh" formControlName="ssh" />
+                    <label>SSH</label>
+                </clr-checkbox-wrapper>
+                <clr-checkbox-wrapper>
+                    <input type="checkbox" clrCheckbox name="erasedisks" id="erasedisks" formControlName="erasedisks" />
+                    <label>Erase all disks</label>
+                </clr-checkbox-wrapper>
+                <clr-checkbox-wrapper>
+                    <input type="checkbox" clrCheckbox name="allowlegacycpu" id="allowlegacycpu"
+                        formControlName="allowlegacycpu" />
+                    <label>Allow Legacy CPU</label>
+                </clr-checkbox-wrapper>
+                <clr-checkbox-wrapper>
+                    <input type="checkbox" clrCheckbox name="certificate" id="certificate"
+                        formControlName="certificate" />
+                    <label>Generate Certificate</label>
+                </clr-checkbox-wrapper>
+                <clr-checkbox-wrapper>
+                    <input type="checkbox" clrCheckbox name="createvmfs" id="createvmfs" formControlName="createvmfs" />
+                    <label>Create VMFS</label>
+                </clr-checkbox-wrapper>
+            </div>
+            <div>
+                <cds-toggle>
+                    <label>Show advanced options</label>
+                    <input type="checkbox" [(ngModel)]="advanced" [ngModelOptions]="{standalone: true}"/>
+                </cds-toggle>
+                <cds-textarea layout="vertical" *ngIf="advanced" id="ks_textarea">
+                    <label>ks.cfg</label>
+                    <textarea formControlName="ks" name="ks"></textarea>
+                    <cds-control-message>Modify the default ks.cfg file</cds-control-message>
+                </cds-textarea>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer modal-vertical">
+        <div class="alert alert-danger" role="alert" *ngIf="errors">
+            <div class="alert-items">
+                <div class="alert-item static" *ngFor="let error of errors | keyvalue">
+                    <div class="alert-icon-wrapper">
+                        <clr-icon class="alert-icon" shape="exclamation-circle"></clr-icon>
+                    </div>
+                    <span class="alert-text">
+                        {{error.value}}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-buttons">
+            <button type="button" class="btn btn-outline" (click)="showGroupModalMode = ''">Cancel</button>
+            <button *ngIf="showGroupModalMode === 'add'" type="button" class="btn btn-primary"
+                (click)="submitGroup()">Add</button>
+            <button *ngIf="showGroupModalMode === 'edit'" type="button" class="btn btn-primary"
+                (click)="updateGroup()">Update</button>
+        </div>
+    </div>
+</clr-modal>

@@ -1,0 +1,189 @@
+<button class="btn btn-primary" (click)="wizard.open()">Start Guided Host Deployment</button>
+
+<clr-wizard #wizard 
+  [(clrWizardOpen)]="open" 
+  [clrWizardSize]="'xl'" 
+  (clrWizardOnFinish)="doFinish()"
+  (clrWizardOnCancel)="doCancel()">
+  <clr-wizard-title>
+    <!-- {{ model.forceReset ? 'Wizard resets' : "Wizard doesn't reset" }} -->
+    Guided Host Deployment
+  </clr-wizard-title>
+
+  <clr-wizard-button [type]="'cancel'">Cancel</clr-wizard-button>
+  <clr-wizard-button [type]="'previous'">Back</clr-wizard-button>
+  <clr-wizard-button [type]="'next'">Next</clr-wizard-button>
+  <clr-wizard-button [type]="'finish'">Finish</clr-wizard-button>
+
+  <clr-wizard-page 
+
+    (clrWizardPageOnCommit)="onCommit()"
+    (clrWizardPageOnCancel)="doCancel()"
+    [clrWizardPagePreventDefault]="true"
+    >
+    <ng-template clrPageTitle>Add Hosts</ng-template>
+
+    <!-- Handle loading and error states here -->
+
+    
+    <clr-alert
+      [clrAlertType]="'alert-info'"
+      [clrAlertClosable]="true"
+      [clrCloseButtonAriaLabel]="'Close Wiki alert'"
+    >
+      <clr-alert-item>
+        This&nbsp;
+        <a
+          href="settings/help"
+          target="_blank"
+        >
+          help page
+        </a>
+        &nbsp;might help you.
+      </clr-alert-item>
+    </clr-alert>
+    <clr-alert
+      *ngIf="errorFlag"
+      [clrAlertType]="'alert-danger'"
+      [clrCloseButtonAriaLabel]="'Close Answer alert'"
+    >
+    <div *ngFor="let error of model.errors">
+      <clr-alert-item>{{ error.subject }}:  {{ error.message }}</clr-alert-item>
+    </div>
+      
+    </clr-alert>
+
+    <!-- select Vendor using Dropdown -->
+
+
+    <clr-dropdown>
+      <button class="btn btn-outline btn-sm" clrDropdownTrigger>
+        Vendor: {{ model.selectedVendor || 'Select Vendor' }} &nbsp;
+        <cds-icon shape="angle" direction="down"></cds-icon>
+      </button>
+      <clr-dropdown-menu clrPosition="bottom-left" *clrIfOpen>
+        <label class="dropdown-header" aria-hidden="true">Select Host Vendor</label>
+        <div aria-label="HPE" clrDropdownItem (click)="selectVendor('HPE')">HPE</div>
+        <div aria-label="Lenovo" clrDropdownItem (click)="selectVendor('Lenovo')">Lenovo</div>
+      </clr-dropdown-menu>
+    </clr-dropdown>
+
+
+
+    <clr-checkbox-wrapper>
+      <input #useSameCreds type="checkbox" clrCheckbox name="useSameCreds" [(ngModel)]="model.useSameCreds" />
+      <label>Use the same credentials for all Hosts</label>
+    </clr-checkbox-wrapper>
+    <div *ngIf="model.useSameCreds" class="credentials-container">
+      <clr-input-container>
+        <label>Username</label>
+        <input clrInput placeholder="Enter username" [(ngModel)]="model.username" />
+      </clr-input-container>
+      <clr-password-container>
+        <label>Password</label>
+        <input clrPassword placeholder="Enter password" [(ngModel)]="model.password" />
+      </clr-password-container>
+    </div>
+
+    <!-- Datagrid to show already added hosts -->
+    <clr-datagrid>
+      <clr-dg-column>ILO IP Address</clr-dg-column>
+      <clr-dg-column>Username</clr-dg-column>
+      <clr-dg-column>Password</clr-dg-column>
+      <clr-dg-column>Actions</clr-dg-column>
+      <clr-dg-row *clrDgItems="let host of model.hosts; let i = index">
+        <clr-dg-cell>{{host.iloIpAddr}}</clr-dg-cell>
+        <clr-dg-cell *ngIf="!model.useSameCreds">{{host.username}}</clr-dg-cell>
+        <clr-dg-cell *ngIf="model.useSameCreds">{{model.username }}</clr-dg-cell>
+        <clr-dg-cell *ngIf="!model.useSameCreds">{{ '*'.repeat(host.password.length) }}</clr-dg-cell>
+        <clr-dg-cell *ngIf="model.useSameCreds">{{ '*'.repeat(model.password.length) }}</clr-dg-cell>
+        <clr-dg-cell>
+          <button class="btn btn-sm btn-outline" (click)="editHost(i)">Edit</button>
+          <button class="btn btn-sm btn-danger" (click)="removeHost(i)">Remove</button>
+        </clr-dg-cell>
+      </clr-dg-row>
+      <clr-dg-footer>
+        <clr-dg-pagination #pagination [clrDgPageSize]="4">
+          {{ pagination.firstItem + 1 }} - {{ pagination.lastItem + 1 }} of
+          {{ (model.hosts ?? []).length }} Hosts
+        </clr-dg-pagination>
+      </clr-dg-footer>
+
+    </clr-datagrid>
+
+    <!-- Input line for adding a new host -->
+    <div class="credentials-container">
+      <clr-input-container>
+        <label>ILO IP address</label>
+        <input clrInput placeholder="Enter ILO IP address" [(ngModel)]="newHostInput.iloIpAddr" />
+      </clr-input-container>
+      <clr-input-container *ngIf="!model.useSameCreds">
+        <label>Username</label>
+        <input clrInput placeholder="Enter username" [(ngModel)]="newHostInput.username" />
+      </clr-input-container>
+      <clr-password-container *ngIf="!model.useSameCreds">
+        <label>Password</label>
+        <input clrPassword placeholder="Enter password" [(ngModel)]="newHostInput.password" />
+      </clr-password-container>
+    </div>
+
+    <!-- Button to add the new host -->
+    <button class="btn btn-outline btn-sm" (click)="addHost()">Add host</button>
+
+    <!-- Button to add bulk import new hosts -->
+    <button class="btn btn-outline btn-sm" (click)="triggerFileInput()">Import Hosts</button>
+    <input type="file" #fileInput accept=".csv" (change)="importHostsFromCSVToGroup($event)" style="display: none;" />
+    <input #fileInput type="file" style="display: none;" (change)="importHostsFromCSVToGroup($event)" />
+
+    <!-- mandatory -->
+    <clr-checkbox-wrapper>
+      <input #setIloPort type="checkbox" clrCheckbox name="setIloPort" [(ngModel)]="model.setIloPort" />
+      <label>Use another ILO Port than 443</label>
+    </clr-checkbox-wrapper>
+    <div *ngIf="model.setIloPort" class="credentials-container">
+      <clr-input-container>
+        <label>Port</label>
+        <input clrInput placeholder="Enter Port" [(ngModel)]="model.iloPort" />
+      </clr-input-container>
+    </div>
+
+
+
+    <clr-spinner *ngIf="loadingFlag">Loading</clr-spinner>
+  </clr-wizard-page>
+
+  <clr-wizard-page>
+    <ng-template clrPageTitle>Page 2</ng-template>
+    <!-- mandatory -->
+    <clr-input-container>
+      <label>What is your favorite color?</label>
+      <input clrInput placeholder="Color?" #stepTwoInput [(ngModel)]="model.favoriteColor" />
+    </clr-input-container>
+  </clr-wizard-page>
+
+  <clr-wizard-page>
+    <ng-template clrPageTitle>Page 3</ng-template>
+    <!-- mandatory -->
+    <clr-input-container>
+      <label>What is your favorite ice cream?</label>
+      <input clrInput placeholder="Flavor?" #stepThreeInput [(ngModel)]="model.flavorOfIceCream" />
+    </clr-input-container>
+  </clr-wizard-page>
+
+  <clr-wizard-page>
+    <ng-template clrPageTitle>Page 4</ng-template>
+    <!-- mandatory -->
+    <clr-input-container>
+      <label>What is your lucky number?</label>
+      <input clrInput placeholder="Lucky number?" #stepFourInput type="number" [(ngModel)]="model.luckyNumber" />
+
+    </clr-input-container>
+    <p>Check below if you want the wizard to reset when it finishes or closes.</p>
+
+    <clr-checkbox-wrapper>
+      <input #forceReset type="checkbox" clrCheckbox name="forceReset" [(ngModel)]="model.forceReset" />
+      <label>Force reset on close</label>
+    </clr-checkbox-wrapper>
+
+  </clr-wizard-page>
+</clr-wizard>
