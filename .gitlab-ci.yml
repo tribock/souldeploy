@@ -10,7 +10,7 @@ stages:
     - name: docker:dind
       command: ["dockerd", "--host=tcp://0.0.0.0:2375"]
       alias: 'docker'
-  image: carlallen/docker:buildx
+  image: docker:27-dind
   before_script:
    - echo $REGISTRY_USER
    - docker login -u $REGISTRY_USER -p $REGISTRY_PASS ${DOCKER_REGISTRY}
