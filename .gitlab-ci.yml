@@ -6,10 +6,15 @@ stages:
   - renovate_bot  
 
 .docker-build:
-  image: ghcr.io/crazy-max/docker
+  services:
+    - name: docker:dind
+      command: ["dockerd", "--host=tcp://0.0.0.0:2375"]
+      alias: 'docker'
+  image: carlallen/docker:buildx
   before_script:
    - echo $REGISTRY_USER
    - docker login -u $REGISTRY_USER -p $REGISTRY_PASS ${DOCKER_REGISTRY}
+   - docker buildx create --driver=docker-container --name=buildkit-builder --use
   script:
    - export CI_COMMIT_TAG=${CI_COMMIT_TAG:-$CI_COMMIT_SHA}
    - export CI_COMMIT_TAG=${CI_COMMIT_TAG/*-/}
