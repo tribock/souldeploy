@@ -20,7 +20,7 @@ stages:
    - export CI_COMMIT_TAG=${CI_COMMIT_TAG/*-/}
    - ls src/${SVC_PATH}/Dockerfile && export DOCKER_FILE_PATH=src/${SVC_PATH}/Dockerfile || DOCKER_FILE_PATH=${DOCKERFILE:-Dockerfile}
    - export IMAGE_PATH=${DOCKER_REGISTRY}/${DOCKER_REGISTRY_ROOT:-ixcloud-portal}/${SVC_NAME:-$CI_PROJECT_NAME}
-   - docker buildx build --build-arg CI_COMMIT_TAG=${CI_COMMIT_TAG} --build-arg DATE=$(date -u +'%Y-%m-%d') --push --platform linux/arm64/v8,linux/amd64 --build-arg CI_COMMIT_TAG -t ${IMAGE_PATH}:$CI_COMMIT_TAG -f $DOCKER_FILE_PATH ${DOCKER_BUILD_ROOT:-.}
+   - docker buildx build --build-arg CI_COMMIT_TAG=${CI_COMMIT_TAG}  --push --platform linux/arm64/v8,linux/amd64 --build-arg CI_COMMIT_TAG -t ${IMAGE_PATH}:$CI_COMMIT_TAG -f $DOCKER_FILE_PATH ${DOCKER_BUILD_ROOT:-.}
 
 variables:
   LOG_LEVEL: DEBUG
