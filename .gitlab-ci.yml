@@ -24,6 +24,7 @@ stages:
 
 variables:
   LOG_LEVEL: DEBUG
+  SVC_NAME: go-via
  
 
 
