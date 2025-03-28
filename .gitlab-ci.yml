@@ -27,27 +27,26 @@ variables:
  
 
 
-# deploy:
-#   image: registry.ixcloud.ch/ix-public/sak-oc:latest
-#   stage: deploy
-#   script:
-#     - echo ${CI_GIT_CONFIG} > ~/.gitconfig
-#     - git config --global user.email "update@ixcloud.ch"
-#     - git config --global user.name "update repo"
-#     - git config --global --add safe.directory /builds/k8s-operators/caas-cluster-setup
-#     - git remote remove origin
-#     - git remote add origin ${CI_GIT_CREDENTIALS}/k8s-operators/caas-cluster-setup.git
-#     - git fetch
-#     - git checkout master
-#     - export CI_COMMIT_TAG=$(git tag -l --sort=v:refname| tail -1)
-#     - VERSION=${CI_COMMIT_TAG} envsubst < zarf/config/manager/kustomization.tmpl >  zarf/config/manager/kustomization.yaml
-#     - VERSION=${CI_COMMIT_TAG} envsubst < zarf/k8s/base/kustomization.tmpl >  zarf/k8s/base/kustomization.yaml
-#     - git commit -am "[skip ci] add new version" || echo "nothing to commit"
-#     - git push --set-upstream origin master
-#   tags:
-#     - stdeployment
-#   only:
-#     - tags 
+deploy:
+  image: registry.ixcloud.ch/ix-public/sak-oc:latest
+  stage: deploy
+  script:
+    - echo ${CI_GIT_CONFIG} > ~/.gitconfig
+    - git config --global user.email "update@soultec.ch"
+    - git config --global user.name "update repo"
+    - git config --global --add safe.directory /builds/soultec/souldeploy
+    - git remote remove origin
+    - git remote add origin ${CI_GIT_CREDENTIALS}/soultec/souldeploy.git
+    - git fetch
+    - git checkout main
+    - export CI_COMMIT_TAG=$(git tag -l --sort=v:refname| tail -1)
+    - VERSION=${CI_COMMIT_TAG} envsubst < deploy/kustomization.tmpl >  deploy/kustomization.yaml
+    - git commit -am "[skip ci] add new version" || echo "nothing to commit"
+    - git push --set-upstream origin main
+  tags:
+    - stdeployment
+  only:
+    - tags 
 
 
 
@@ -80,5 +79,5 @@ build-docker-image:
     - stdeployment
   only:
     - tags
-    - master
+    - main
     - merge_requests

@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  go-via:
+    image: registry.soultec.lab/souldeploy/go-via:v1.0.1-22-g1cdcfee
+    network_mode: host
+    volumes:
+      - ./tftp:/app/tftp
+      - ./database:/app/database
+      - ./config:/app/config
+      - ./cert:/app/cert
+      - ./secret:/app/secret

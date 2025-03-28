@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: souldeploy
+  labels:
+    app: souldeploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: souldeploy
+  template:
+    metadata:
+      labels:
+        app: souldeploy
+    spec:
+      containers:
+      - name: souldeploy
+        image: registry.soultec.lab/souldeploy/souldeploy:v1.0.3
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: tftp-volume
+          mountPath: /app/tftp
+        - name: database-volume
+          mountPath: /app/database
+        - name: config-volume
+          mountPath: /app/config
+        - name: cert-volume
+          mountPath: /app/cert
+        - name: secret-volume
+          mountPath: /app/secret
+        ports:
+        - containerPort: 8443   
+      volumes:
+      - name: tftp-volume
+        persistentVolumeClaim:
+          claimName: tftp-pvc
+      - name: database-volume
+        persistentVolumeClaim:
+          claimName: database-pvc
+      - name: config-volume
+        persistentVolumeClaim:
+          claimName: config-pvc
+      - name: cert-volume
+        persistentVolumeClaim:
+          claimName: cert-pvc
+      - name: secret-volume
+        persistentVolumeClaim:
+          claimName: secret-pvc
